@@ -1,30 +1,58 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:object_detection_app/app/app.dart';
+import 'package:object_detection_app/features/detection/domain/entities/detected_object.dart';
+import 'package:object_detection_app/features/detection/domain/repositories/detection_repository.dart';
+import 'package:object_detection_app/features/detection/domain/usecases/detect_objects.dart';
+import 'package:object_detection_app/features/detection/presentation/controllers/detection_controller.dart';
+import 'package:provider/provider.dart';
+import 'package:object_detection_app/services/permission_service.dart';
 
-import 'package:object_detection/main.dart';
+class _FakeRepository implements DetectionRepository {
+  @override
+  CameraController? get cameraController => null;
+  @override
+  Future<void> initialize() async {}
+  @override
+  Future<Stream<List<DetectedObject>>> startDetection() async => const Stream.empty();
+  @override
+  Future<void> stopDetection() async {}
+  @override
+  void setConfidenceThreshold(double value) {}
+  @override
+  Future<void> release() async {}
+  @override
+  Future<void> dispose() async {}
+}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  Widget buildApp() {
+    final repository = _FakeRepository();
+    return ChangeNotifierProvider(
+      create: (_) => DetectionController(
+        detectObjects: DetectObjects(repository),
+        repository: repository,
+        permissionService: const PermissionService(),
+      ),
+      child: const ObjectDetectionApp(),
+    );
+  }
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+  testWidgets('home page shows the title and the start button', (tester) async {
+    await tester.pumpWidget(buildApp());
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Real-time object detection'), findsOneWidget);
+    expect(find.text('Start detection'), findsOneWidget);
+  });
+
+  testWidgets('settings page exposes the confidence slider', (tester) async {
+    await tester.pumpWidget(buildApp());
+    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Slider), findsOneWidget);
+    expect(find.textContaining('Confidence threshold'), findsOneWidget);
   });
 }

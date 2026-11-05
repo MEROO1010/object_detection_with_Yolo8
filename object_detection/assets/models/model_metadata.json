@@ -1,0 +1,13 @@
+{
+  "name": "coco_ssd_mobilenet_v1_1.0_quant",
+  "task": "object_detection",
+  "input": { "width": 300, "height": 300, "channels": 3, "type": "uint8", "layout": "NHWC" },
+  "outputs": [
+    { "index": 0, "name": "locations", "shape": [1, 10, 4], "format": "ymin,xmin,ymax,xmax (normalized)" },
+    { "index": 1, "name": "classes", "shape": [1, 10] },
+    { "index": 2, "name": "scores", "shape": [1, 10] },
+    { "index": 3, "name": "count", "shape": [1] }
+  ],
+  "labels_file": "labels.txt",
+  "label_offset": 1
+}
